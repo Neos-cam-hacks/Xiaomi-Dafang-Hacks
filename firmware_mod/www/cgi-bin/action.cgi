@@ -109,12 +109,22 @@ if [ -n "$F_cmd" ]; then
       blue_led off
     ;;
 
+    blue_led_status)
+      blue_led status
+      return
+    ;;
+
     yellow_led_on)
       yellow_led on
     ;;
 
     yellow_led_off)
       yellow_led off
+    ;;
+
+    yellow_led_status)
+      yellow_led status
+      return
     ;;
 
     ir_led_on)
@@ -125,12 +135,22 @@ if [ -n "$F_cmd" ]; then
       ir_led off
     ;;
 
+    ir_led_status)
+      ir_led status
+      return
+    ;;
+
     ir_cut_on)
       ir_cut on
     ;;
 
     ir_cut_off)
       ir_cut off
+    ;;
+
+   ir_cut_status)
+      ir_cut status
+      return
     ;;
 
     motor_left)
@@ -186,6 +206,16 @@ if [ -n "$F_cmd" ]; then
     rtsp_stop)
       /system/sdcard/controlscripts/rtsp-mjpeg stop
       /system/sdcard/controlscripts/rtsp-h264 stop
+    ;;
+
+    h264_status)
+      rtsp_h264_server status
+      return
+    ;;
+
+    mjpeg_status)
+      rtsp_mjpeg_server status
+      return
     ;;
 
     settz)
@@ -246,7 +276,7 @@ if [ -n "$F_cmd" ]; then
         echo "DISPLAY_AXIS=false" > /system/sdcard/config/osd.conf
         echo "DISPLAY_AXIS disable<br />"
       fi
-      
+
       echo "OSD=\"${osdtext}\"" | sed -r 's/[ ]X=.*"/"/' >> /system/sdcard/config/osd.conf
       echo "OSD set<br />"
 
@@ -295,6 +325,11 @@ if [ -n "$F_cmd" ]; then
     auto_night_mode_stop)
       /system/sdcard/controlscripts/auto-night-detection stop
     ;;
+    
+	auto_night_mode_status)
+      auto_night_mode status
+      return
+    ;;
 
     toggle-rtsp-nightvision-on)
       /system/sdcard/bin/setconf -k n -v 1
@@ -303,13 +338,18 @@ if [ -n "$F_cmd" ]; then
     toggle-rtsp-nightvision-off)
       /system/sdcard/bin/setconf -k n -v 0
     ;;
-    
+
     night_mode_on)
       night_mode on
     ;;
 
     night_mode_off)
       night_mode off
+    ;;
+
+    night_mode_status)
+      night_mode status
+      return
     ;;
 
     flip-on)
@@ -329,7 +369,12 @@ if [ -n "$F_cmd" ]; then
     motion_detection_off)
       motion_detection off
     ;;
-    
+
+    motion_detection_status)
+      motion_detection status
+      return
+    ;;
+
     snapshot)
       snapshot
     ;;
@@ -419,28 +464,22 @@ if [ -n "$F_cmd" ]; then
     ;;
 
     autonight_sw)
-      if [ ! -f /system/sdcard/config/autonight.conf ]; then
-        echo "-S" > /system/sdcard/config/autonight.conf
-      fi
-      current_setting=$(sed 's/-S *//g' /system/sdcard/config/autonight.conf)
-      echo "-S" $current_setting > /system/sdcard/config/autonight.conf
+      rewrite_config /system/sdcard/config/autonight.conf autonight_mode "sw"
     ;;
 
     autonight_hw)
-      if [ -f /system/sdcard/config/autonight.conf ]; then
-        sed -i 's/-S *//g' /system/sdcard/config/autonight.conf
-      fi
+      rewrite_config /system/sdcard/config/autonight.conf autonight_mode "hw"
     ;;
 
     get_sw_night_config)
-      cat /system/sdcard/config/autonight.conf
+      . /system/sdcard/config/autonight.conf
+      echo $sw_parameters
       exit
     ;;
 
     save_sw_night_config)
-      #This also enables software mode
       night_mode_conf=$(echo "${F_val}"| sed "s/+/ /g" | sed "s/%2C/,/g")
-      echo $night_mode_conf > /system/sdcard/config/autonight.conf
+      rewrite_config /system/sdcard/config/autonight.conf sw_parameters "$night_mode_conf"
       echo Saved $night_mode_conf
     ;;
 
@@ -558,6 +597,11 @@ if [ -n "$F_cmd" ]; then
           return
           ;;
 
+	 motion_detection_mail_status)
+		  motion_send_mail status
+		  return
+		  ;;
+
      motion_detection_telegram_on)
           rewrite_config /system/sdcard/config/motion.conf send_telegram "true"
           return
@@ -565,6 +609,11 @@ if [ -n "$F_cmd" ]; then
 
      motion_detection_telegram_off)
           rewrite_config /system/sdcard/config/motion.conf send_telegram "false"
+          return
+          ;;
+
+	 motion_detection_telegram_status)
+          motion_send_telegram status
           return
           ;;
 
@@ -605,6 +654,11 @@ if [ -n "$F_cmd" ]; then
 
      motion_detection_mqtt_snapshot_off)
           rewrite_config /system/sdcard/config/motion.conf publish_mqtt_snapshot "false"
+          return
+          ;;
+
+     show_HWmodel)
+          detect_model
           return
           ;;
 
